@@ -1,6 +1,5 @@
 Require Import ssreflect ssrnat ssrbool bigop.
 
-Require Import eqtype.
 (*Require Import ssralg.*)
 (*Import GRing.*)
   (* Num.Theory de ssrnum *)
@@ -10,10 +9,8 @@ Lemma next_power_2 n: exists k, 2 ^ k > n.
   exists n.
   elim n => //=.
   move => m H.
-  rewrite expnS (@leq_trans (2^m + 1)) //.
-    by rewrite -add1n addnC leq_add2r.
-    rewrite mul2n -addnn leq_add2l.
-    elim m; by [ | move => ? ?; rewrite expnS mul2n -addnn; rewrite ltn_addr].  
+  rewrite expnS (@leq_trans (2^m + 1));
+    by [ | rewrite -add1n addnC leq_add2r | rewrite mul2n -addnn leq_add2l expn_gt0].
 Qed.
 
 Theorem fb_ind  (P: nat -> Prop): P 0 -> P 1 ->
