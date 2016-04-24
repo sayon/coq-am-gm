@@ -1,61 +1,107 @@
 Require Import ssreflect ssrnat ssrbool bigop.
 
-(*Require Import ssralg.*)
+Load "fb_ind.v".
+
+Import fb_ind.
+
+       
+Theorem am_ge_gm' (n:nat): forall (f:nat->nat),
+                             (\sum_(0 <= i < n ) (f i) )^n >= n^n * \prod_(0 <= i < n) (f i) .
+Proof.
+  move: n.
+  
+  apply (fb_ind (fun (n:nat) =>(forall (f:nat->nat), (\sum_(0 <= i < n ) (f i) )^n >= n^n * \prod_(0 <= i < n) (f i)))) =>//=.
+  + (* P 0 *)
+    move=> f.
+    by rewrite !big_nil.
+
+  + (* P 1 *)
+    move=>f.
+    rewrite !expnS expn0 !mul1n expn0 muln1.
+    rewrite big_nat_recl //=. rewrite big_nil //=.
+    rewrite big_nat_recl //=.
+    by rewrite big_nil addn0 muln1.
+
+  + (* P 2^i *)
+    move => n Hind f.
+    rewrite expnS.         
+    rewrite mul2n -addnn.
+    
+    
+
+
+    
+    simpl.
+    done.
+    
+    move=> f.
+    rewrite mul1n.
+    simpl.
+    rewrite big_ltn.
+    
+    rewrite big_nat_recl.
+
+
+  + (* P 0 *)
+    by move=> ?.
+  + (* P 1 *)
+    move=> f. rewrite !mul1n.
+    rewrite !big_nat1.
+      by case (f 0); [| by move => ?; rewrite leq_pmulr].
+
+  + (* P (2^n)*)
+    move => n  H0 f.
+    rewrite !expnS expn0 muln1.
+    rewrite [X in _ * X<= _](@big_cat_nat _  _ _ (2^n)) //=.
+    rewrite [X in _ <= X * _](@big_cat_nat _  _ _ (2^n)) //=.
+    remember (\prod_(0 <= i < 2 ^ n) f i) as p0.
+    rewrite [X in _ <= _ * X](@big_cat_nat _  _ _ (2^n)) //=.
+    remember (\sum_(0 <= i < 2^n) f i) as s0.
+
+    rewrite mul2n -addnn.
+    rewrite -[X in \prod_(X <= _ < _ + _) _ _]add0n.
+    rewrite -[X in \sum_(X <= _ < _ + _) _ _]add0n //=.
+
+    rewrite !big_addn -addnBA //=.
+    rewrite subnn addn0.
+
+    remember (\prod_(0 <= i < 2 ^ n) f (i + 2 ^ n)) as p1.
+    remember (\sum_(0  <= i < 2 ^ n) f (i + 2 ^ n)) as s1.
+
+    rewrite (@leq_trans (s0^2 + s1^2)) //=.
+    rewrite (@leq_trans (2^n * 2^n * (p0 + p1)^2)) //=.
+    replace ((2^n + 2^n) * (2^n + 2^n)) with (2^n * 2^n * 4).
+    rewrite mulnn.
+    rewrite -mulnA.
+    rewrite leq_mul2l.
+    apply /orP. right.
+      by apply nat_AGM2.
+      
+      ring.
+      
+
+    rewrite addnn -muln2.
+    simpl.
+    ring.
+    
+    rewrite -[X in _ <= X + _]mulnC -[X in _ <= _ + X]mulnC.
+    rewrite -mulnDl.
+    rewrite mulnCA.
+      rewrite leq_mul //=.
+      rewrite mulnC.
+      by apply nat_AGM2.
+
+      
+      rewrite mulnD.
+      rewrite leq_add.
+      
+      Search (_ + _ <= _ + _).
+      
+
+      (*Require Import ssralg.*)
 (*Import GRing.*)
   (* Num.Theory de ssrnum *)
   (* big_cat_nat *)
 
-Lemma next_power_2 n: exists k, 2 ^ k > n.
-  exists n.
-  elim n => //=.
-  move => m H.
-  rewrite expnS (@leq_trans (2^m + 1));
-    by [ | rewrite -add1n addnC leq_add2r | rewrite mul2n -addnn leq_add2l expn_gt0].
-Qed.
-
-Theorem fb_ind  (P: nat -> Prop): P 0 -> P 1 ->
-                           (forall (n:nat), P (2^n) -> P(2^(n.+1))) ->
-                           (forall (n:nat), P n.+1 -> P n) ->
-                           (forall n, P n).
-Proof.
-  move=> H0 H1 Hdirect Hrev n.  
-  have Hpowers: (forall m,  P (2^m)) by move=>m; elim m; [by rewrite expn0| ].
-  have Hle: (forall x y i, P x -> y + i = x -> P y).
-     move=> x y i.
-     elim: i y x.
-       + move => ? ? ?. by rewrite addn0 => ->.       
-       + move => a H y [|x] Hpsx; rewrite addnS => //=.
-         move /eq_add_S =>Hpx.
-         by exact (H _ _ (Hrev _ Hpsx) Hpx).
-  move : (next_power_2 n) => [p] Hp.
-  apply (Hle (2^p) n (2^p-n)) => //=. rewrite addnBA.
-       + by rewrite addnC addnK.
-  rewrite -ltnS.
-  by apply (@ltn_trans (2^p)).
-Qed.
-  
 
 
-
-Definition sq x := x * x.
-       
-Theorem am_ge_gm' (n:nat): forall (f:nat->nat), sq (\sum_(0 <= i < n ) (f i) ) >= n * n * \prod_(0 <= i < n) (f i) .
-Proof.
-  move: n.
-  apply (fb_ind (fun (n:nat) => (forall (f:nat->nat), n*n*  \prod_(0 <= i < n) f i <= sq (\sum_(0 <= i < n) f i)))).
-    + by move=> ?.
-    + move=> f. rewrite !mul1n.
-      rewrite !big_nat1 /sq.
-      by case (f 0); [| by move => ?; rewrite leq_pmulr].
-
-    + move => n  H0 f. 
-      rewrite expnS .
-
-
-      rewrite (@big_cat_nat _  _ _ (2^n)) //=; last by (rewrite mul2n -addnn; apply leq_addr).
-      rewrite [X in sq X](@big_cat_nat _  _ _ (2^n)) //=; last by (rewrite mul2n -addnn; apply leq_addr).
-      rewrite !mul2n -addnn.
-
-
-
-      
