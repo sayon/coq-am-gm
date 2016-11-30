@@ -1,9 +1,6 @@
-Require Import ssreflect ssrnat ssrbool bigop.
+From mathcomp.ssreflect Require Import ssreflect ssrnat ssrbool bigop.
 
 Load "fb_ind.v".
-
-Import fb_ind.
-
        
 Theorem am_ge_gm' (n:nat): forall (f:nat->nat),
                              (\sum_(0 <= i < n ) (f i) )^n >= n^n * \prod_(0 <= i < n) (f i) .
@@ -26,7 +23,6 @@ Proof.
     move => n Hind f.
     rewrite expnS.         
     rewrite mul2n -addnn.
-    
     
 
 
